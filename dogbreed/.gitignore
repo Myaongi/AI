@@ -1,0 +1,23 @@
+# Python 캐시
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# 모델 가중치
+assets/weights/*.pth
+assets/weights/*.pt
+__pycache__/
+*.pyc
+assets/**/*.pt
+assets/**/*.pth
+dogbreed/*.pt
+__pycache__/
+*.pyc
+assets/**/*.pt
+assets/**/*.pth
+dogbreed/*.pt
+__pycache__/
+*.pyc
+assets/**/*.pt
+assets/**/*.pth
+dogbreed/*.pt
