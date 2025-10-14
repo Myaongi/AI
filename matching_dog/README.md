@@ -22,3 +22,5 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000
 - **main.py**: FastAPI 라우팅(`/normalize`, `/embed`, `/score`, `/pass-threshold`)  
 - **requirements.txt**: 의존성  
 - **README.md**: 실행/엔드포인트/환경변수 요약
+- **pipeline_embed.py**: 이미지/텍스트 입력 → LLM 정제화 + YOLO 크롭 + CLIP 임베딩 계산
+- **pipeline_similarity.py**: 게시물 A vs B (1:1) → 4유형 유사도 계산 + 가중합 + 임계값 판정
