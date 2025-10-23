@@ -1,4 +1,4 @@
-id,name_ko
+﻿id,name_ko
 n02085620-Chihuahua,치와와
 n02085782-Japanese_spaniel,재패니즈 친
 n02085936-Maltese_dog,말티즈
@@ -14,7 +14,6 @@ n02088632-bluetick,블루틱 쿤하운드
 n02089078-black-and-tan_coonhound,블랙 앤 탄 쿤하운드
 n02089867-Walker_hound,워커 하운드
 n02089973-English_foxhound,잉글리시 폭스하운드
-n02090379-redbone,레드본 쿤하운드
 n02090622-borzoi,보르조이
 n02090721-Irish_wolfhound,아이리시 울프하운드
 n02091032-Italian_greyhound,이탈리안 그레이하운드
@@ -71,7 +70,6 @@ n02105412-kelpie,켈피
 n02105505-komondor,코몬도르
 n02105641-Old_English_sheepdog,올드 잉글리시 쉽독
 n02105855-Shetland_sheepdog,셰틀랜드 쉽독
-n02106030-collie,콜리
 n02106166-Border_collie,보더 콜리
 n02106382-Bouvier_des_Flandres,부비에 데 플랑드르
 n02106550-Rottweiler,로트와일러
@@ -85,7 +83,6 @@ n02108551-Tibetan_mastiff,티베탄 마스티프
 n02108915-French_bulldog,프렌치 불도그
 n02109047-Great_Dane,그레이트 데인
 n02109525-Saint_Bernard,세인트 버나드
-n02109961-Eskimo_dog,에스키모 도그
 n02110063-malamute,알래스칸 말라뮤트
 n02110185-Siberian_husky,시베리안 허스키
 n02110627-affenpinscher,아펜핀셔
@@ -98,9 +95,7 @@ n02111889-Samoyed,사모예드
 n02112018-Pomeranian,포메라니안
 n02112137-chow,차우차우
 n02112350-keeshond,키스훈트
-n02113023-Pembroke,웰시 코기 펨브록
-n02113186-Cardigan,웰시 코기 카디건
-n02113624-toy_poodle,토이 푸들
-n02113712-miniature_poodle,미니어처 푸들
+n02113023-Pembroke,웰시코기
+n02113624-toy_poodle,푸들
 n02113799-standard_poodle,스탠다드 푸들
 n02113978-Mexican_hairless,멕시칸 헤어리스
