@@ -90,4 +90,4 @@ out = predict(image, return_topk=5)  # image: 경로(str) / 바이트(bytes) / P
 ## 5) 운영 팁
 
 * 초기화 `init(warmup=True)`는 **프로세스 시작 시 1회**만 호출.
-> “**내부 판정은 모듈이 처리하니, 우리는 `prediction.decision`만 사용자에게 보여주면 됩니다.**
+> “**내부 판정은 내부 모듈이 처리, `prediction.decision(품종 예측 결과)`만 사용자에게 제공.**
