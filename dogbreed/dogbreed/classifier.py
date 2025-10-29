@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import Optional, Dict, Any, List, Tuple
-import os, json, csv
+import os, json
 import numpy as np
 import torch
 import torch.nn.functional as F
@@ -9,9 +9,9 @@ import pandas as pd
 
 """
 classifier.py — labels.json 없이 ko_mapping.csv만으로 동작
-- ko_mapping.csv에서 영어 라벨 리스트(labels)와 en→ko 매핑을 모두 생성
-- 입력 텐서 -> logits -> softmax(probs) -> 엔트로피(H)
-- H >= H_TH 이면 "믹스", 아니면 top1 한국어 품종명
+- ko_mapping.csv에서 영어 라벨 리스트(labels)와 en→ko 매핑을 생성
+- 입력 텐서 -> logits -> softmax(probs)
+- 정규화 엔트로피(H_norm), top-1 확률(p1), 마진(p1-p2) 기준으로 믹스 판정
 """
 
 # ------------------------------------------------------------
@@ -23,7 +23,14 @@ _STATE: Dict[str, Any] = {
     "model": None,
     "labels": None,           # idx -> en (list[str])
     "ko_map": None,           # en -> ko (dict[str,str])
-    "entropy_threshold": 1.6  # 자연로그 기준
+    "entropy_threshold": 1.6  # (이전 호환용; 현재 최종 판정엔 사용하지 않음)
+}
+
+# 믹스견 판정 상수(검증셋에서 산출된 값 그대로 사용)
+_MIX_CFG = {
+    "H_norm_th": 0.4186870239598538,   # 정규화 엔트로피 임계
+    "p1_th":     0.55908203125,        # top-1 확률 임계
+    "margin_th": 0.37890625            # p1 - p2 마진 임계
 }
 
 # ------------------------------------------------------------
@@ -63,16 +70,13 @@ def _parse_ko_csv(csv_path: str) -> Tuple[List[str], Dict[str, str]]:
             if en:
                 ko_map[en] = ko or en
     else:
-        # ko 열이 없어도 영문 그대로 매핑
         ko_map = {en: en for en in labels_en}
 
     return labels_en, ko_map
 
 # (이전 호환: labels.json이 있으면 읽고 싶다면 아래 보조함수 유지)
 def _load_labels_json(path: Optional[str]) -> Optional[List[str]]:
-    if not path:
-        return None
-    if not os.path.exists(path):
+    if not path or not os.path.exists(path):
         return None
     with open(path, "r", encoding="utf-8") as f:
         obj = json.load(f)
@@ -96,12 +100,11 @@ def _take_topk(probs: np.ndarray, labels: List[str], k: int) -> List[Dict[str, A
 def load_classifier(
     weight_path: str,
     *,
-    # labels_path는 선택(있으면 사용, 없으면 csv에서 생성)
-    labels_path: Optional[str] = None,
+    labels_path: Optional[str] = None,   # 선택(있으면 사용, 없으면 csv에서 생성)
     ko_mapping_csv: str,
     model_name: str = "tf_efficientnetv2_m_in21ft1k",
-    num_classes: int = 105,
-    entropy_threshold: float = 1.6,
+    num_classes: int = 100,
+    entropy_threshold: float = 1.6,     # (이전 호환용)
     device: Optional[str] = None,
     channels_last: bool = True,
 ) -> None:
@@ -144,9 +147,10 @@ def load_classifier(
         "ko_map": ko_map,
         "entropy_threshold": float(entropy_threshold),
     })
-    print(f"[classifier] loaded on {device} | H_TH={_STATE['entropy_threshold']} | classes={len(labels)}")
+    print(f"[classifier] loaded on {device} | classes={len(labels)}")
 
 def set_entropy_threshold(value: float) -> None:
+    # (이전 호환용 setter; 최종 판정은 _MIX_CFG를 사용)
     _STATE["entropy_threshold"] = float(value)
 
 # ------------------------------------------------------------
@@ -164,7 +168,6 @@ def predict(
     device: str            = _STATE["device"]
     labels: List[str]      = _STATE["labels"]
     ko_map: Dict[str, str] = _STATE["ko_map"]
-    H_TH: float            = _STATE["entropy_threshold"]
 
     # 배치 차원 정리
     if x.ndim == 3:
@@ -177,10 +180,23 @@ def predict(
     logits = model(x)                 # [N,K]
     probs = F.softmax(logits, dim=1)[0].detach().cpu().numpy()  # [K]
 
-    # 3) 엔트로피 (자연로그)
+    # 3) 엔트로피 및 보조 지표
     eps = 1e-9
     H = float(-(probs * np.log(probs + eps)).sum())
-    mixed = H >= H_TH
+    K = probs.shape[0]
+    H_norm = H / np.log(K)
+
+    idx_sorted = np.argsort(-probs)
+    p1 = float(probs[idx_sorted[0]])
+    p2 = float(probs[idx_sorted[1]]) if K >= 2 else 0.0
+    margin = p1 - p2
+
+    # 믹스 규칙 (A OR B1 OR B2)
+    mixed = (
+        (H_norm >= _MIX_CFG["H_norm_th"])
+        or (p1 < _MIX_CFG["p1_th"])
+        or (margin < _MIX_CFG["margin_th"])
+    )
 
     # 4) top-k & 한글 매핑
     top = _take_topk(probs, labels, k=topk)
@@ -195,7 +211,16 @@ def predict(
     return {
         "decision": decision,
         "decision_type": "mixed" if mixed else "breed",
-        "entropy": {"H": H, "threshold": H_TH},
+        "entropy": {
+            "H": H,
+            "H_norm": H_norm,
+            "p1": p1, "p2": p2, "margin": margin,
+            "thresholds": {
+                "H_norm_th": _MIX_CFG["H_norm_th"],
+                "p1_th": _MIX_CFG["p1_th"],
+                "margin_th": _MIX_CFG["margin_th"],
+            }
+        },
         "top1": top1,
         "topk": top
     }
