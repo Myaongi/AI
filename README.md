@@ -1,4 +1,4 @@
-# 🐶 Dog Image Gen Service (Gemini)
+# 🐶 Dog Image Gen Service (Gemini): 강아지 이미지 생성
 
 한국어 입력(품종, 색상, 기타 텍스트)만으로  
 Google **Gemini** 이미지 모델을 이용해 **전신 + 여백의 4:3 강제 PNG** 이미지를 생성합니다.  
