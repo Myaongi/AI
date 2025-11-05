@@ -1,4 +1,4 @@
-## 🐶 Matching CLIP (Fine-tuned Version)
+## 🐶 매칭 서비스: 잃어버렸어요 <-> 목격했어요 게시물
 
 ### 🧩 전체 구조
 
