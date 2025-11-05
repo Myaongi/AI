@@ -1,5 +1,4 @@
 ## 🐶 Matching CLIP (Fine-tuned Version)
----
 
 ### 🧩 전체 구조
 
